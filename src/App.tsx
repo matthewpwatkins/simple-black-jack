@@ -27,7 +27,7 @@ function formatPlayerPoints(hand: Card[], playerStands: boolean): string {
     return getBestHandValue(hand).toString();
   }
   if (values.length > 1) {
-    return values.join(' / ');
+    return values.join(' | ');
   }
   return (values[0] ?? getBestHandValue(hand)).toString();
 }
