@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Container, Row, Col, Card as BsCard, Button, Stack } from 'react-bootstrap';
 import './App.css';
 import {
   newGameState,
@@ -14,11 +16,40 @@ import {
 } from './gameLogic';
 
 
-function formatHand(hand: Card[], revealAll = true): string {
-  if (!revealAll && hand.length > 0) {
-    return hand[0].rank + hand[0].suit + ' [hidden]';
+
+function CardElem({ card, hidden }: { card: Card; hidden?: boolean }) {
+  if (hidden) {
+    return (
+      <BsCard className="bg-secondary text-white text-center border-0 mx-1 d-inline-flex align-items-center justify-content-center" style={{width: '2.5rem', height: '3.5rem', fontSize: '1.5rem'}}>
+        🂠
+      </BsCard>
+    );
   }
-  return hand.map(card => card.rank + card.suit).join(' ');
+  const isRed = card.suit === '♥' || card.suit === '♦';
+  return (
+    <BsCard className={`text-center mx-1 d-inline-flex align-items-center justify-content-center ${isRed ? 'text-danger' : 'text-dark'}`}
+      style={{width: '2.5rem', height: '3.5rem', fontSize: '1.5rem', background: '#fff'}}>
+      {card.rank}{card.suit}
+    </BsCard>
+  );
+}
+
+function HandElem({ hand, revealAll }: { hand: Card[]; revealAll: boolean }) {
+  if (!revealAll && hand.length > 0) {
+    return (
+      <Stack direction="horizontal" gap={1} className="mb-2">
+        <CardElem card={hand[0]} />
+        {hand.slice(1).map((_, i) => (
+          <CardElem key={i + 1} card={hand[i + 1]} hidden />
+        ))}
+      </Stack>
+    );
+  }
+  return (
+    <Stack direction="horizontal" gap={1} className="mb-2">
+      {hand.map((card, i) => <CardElem key={i} card={card} />)}
+    </Stack>
+  );
 }
 
 function formatPlayerPoints(hand: Card[], playerStands: boolean): string {
@@ -69,38 +100,47 @@ const App: React.FC = () => {
   const result = getResultText(game);
 
   return (
-    <div className="App">
-      <div className="game-area">
-        <div className="hands">
-          <div className="hand-block">
-            <h2>Player</h2>
-            <div className="cards">{formatHand(game.playerHand)}</div>
-            <div className="points">Points: {playerPoints}{playerBusted ? ' (BUST)' : ''}</div>
+    <Container className="py-3">
+      <Row className="justify-content-center">
+        <Col xs={12} md={10} lg={8}>
+          <Row className="mb-4">
+            <Col xs={12} md={6} className="mb-3 mb-md-0">
+              <BsCard className="shadow-sm p-3 h-100">
+                <BsCard.Title as="h2" className="h5">Dealer</BsCard.Title>
+                <HandElem hand={game.dealerHand} revealAll={dealerRevealed} />
+                {dealerRevealed ? (
+                  <div className="points">Points: {dealerPoints}{dealerBusted ? ' (BUST)' : ''}</div>
+                ) : (
+                  <div className="points">Points: ?</div>
+                )}
+              </BsCard>
+            </Col>
+            <Col xs={12} md={6}>
+              <BsCard className="shadow-sm p-3 h-100">
+                <BsCard.Title as="h2" className="h5">Player</BsCard.Title>
+                <HandElem hand={game.playerHand} revealAll={true} />
+                <div className="points">Points: {playerPoints}{playerBusted ? ' (BUST)' : ''}</div>
+                <Stack direction="horizontal" gap={2} className="mt-3">
+                  {!game.gameOver && !game.playerStands && !playerBusted && (
+                    <Button variant="info" className="w-100" onClick={handleHit} disabled={getBestHandValue(game.playerHand) >= 21}>Hit</Button>
+                  )}
+                  {!game.gameOver && !game.playerStands && (
+                    <Button variant="primary" className="w-100" onClick={handleHold}>Hold</Button>
+                  )}
+                </Stack>
+                {/* New Game button moved below the player hand panel */}
+              </BsCard>
+            </Col>
+          </Row>
+          <div className="d-flex justify-content-center mb-3">
+            <Button variant="success" className="w-100" style={{maxWidth: 400}} onClick={handleReset}>New Game</Button>
           </div>
-          <div className="hand-block">
-            <h2>Dealer</h2>
-            <div className="cards">{formatHand(game.dealerHand, dealerRevealed)}</div>
-            {dealerRevealed ? (
-              <div className="points">Points: {dealerPoints}{dealerBusted ? ' (BUST)' : ''}</div>
-            ) : (
-              <div className="points">Points: ?</div>
-            )}
+          <div className="result text-center">
+            <h2 className={result.className}>{result.text}</h2>
           </div>
-        </div>
-        <div className="actions">
-          {!game.gameOver && !game.playerStands && !playerBusted && (
-            <button onClick={handleHit} disabled={getBestHandValue(game.playerHand) >= 21}>Hit</button>
-          )}
-          {!game.gameOver && !game.playerStands && (
-            <button onClick={handleHold}>Hold</button>
-          )}
-          <button onClick={handleReset}>New Game</button>
-        </div>
-        <div className="result">
-          <h2 className={result.className}>{result.text}</h2>
-        </div>
-      </div>
-    </div>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
