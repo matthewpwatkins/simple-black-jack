@@ -64,7 +64,15 @@
 
 .result h2 {
   margin-top: 1.2rem;
-  color: #fff;
   font-size: 1.5rem;
   min-height: 2.2em;
+}
+.result-win {
+  color: #4caf50;
+}
+.result-lose {
+  color: #e53935;
+}
+.result-tie {
+  color: #fff;
 }
